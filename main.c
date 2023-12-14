@@ -1,4 +1,5 @@
 #include <MLV/MLV_all.h>
+#include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -9,8 +10,8 @@
 #define LIGNES 18
 
 // Les deux camps :
-#define ABEILLE 'A'
-#define FRELON 'F'
+#define ABEILLES 'A'
+#define FRELONS 'F'
 
 // Les types d'unites :
 #define REINE 'r'
@@ -24,8 +25,7 @@
 #define RECOLTE 'p'
 
 // Les temps necessaires a la production :
-#define TREINEA 8
-#define TREINEF 8
+#define TREINE 8
 #define TOUVRIERE 2
 #define TGUERRIERE 4
 #define TESCADRON 6
@@ -114,55 +114,47 @@ void commencejeu(**plateau, int n) {
     }
 }
 */
-char **cree_table() {
-    char **tab = malloc(LIGNES * sizeof(char *));
-    for (int i = 0; i < LIGNES; i++) {
-        tab[i] = malloc(COLONNES * sizeof(char));
-        for (int j = 0; j < COLONNES; j++) {
-            tab[i][j] = 'N';
-        }
-    }
-    return tab;
-}
 
 int genStart(void) {
     srand((unsigned int)time(NULL));
     return rand() % 2;
 }
 
-int afficheChoix(int n, int *nbPollenA, int *nbPollenF) {
+int afficheChoix(int n, Grille *g) {
     int choix;
     if (n) {
         printf("C'est le tour des Abeilles\n");
-        printf("Pollen : %d\n", *nbPollenA);
+        printf("Pollen : %d\n", g->ressourcesAbeille);
         printf("1 - Produire Reines (7 Pollen, 8 tours)\n");
         printf("2 - Produire Ouvrière (3 Pollen, 2 tours)\n");
         printf("3 - Produire Guerrière (5 Pollen, 4 tours)\n");
         printf("4 - Produire Escadron (6 Pollen, 6 tours)\n");
         printf("5 - Detruire une unite\n");
+        printf("6 - Passer son tour\n");
     } else {
         printf("C'est le tour des Frelons\n");
-        printf("Pollen : %d\n", *nbPollenF);
+        printf("Pollen : %d\n", g->ressourcesFrelon);
         printf("1 - Produire Reines (8 Pollen, 8 tours)\n");
         printf("2 - Produire Frelon (3 Pollen, 5 tours)\n");
         printf("3 - Detruire une unité\n");
+        printf("4 - Passer son tour\n");
     }
     scanf("%d", &choix);
 
     switch (choix) {
     case 1:
         if (n) {
-            if (*nbPollenA >= 7) {
+            if (g->ressourcesAbeille >= 7) {
                 printf("Vous produisez une Reine (7 Pollen, 8 tours)\n");
-                *nbPollenA -= 7;
+                g->ressourcesAbeille -= 7;
                 break;
             } else {
                 printf("Pas assez de pollen pour produire une Reine.\n");
             }
         } else {
-            if (*nbPollenF >= 8) {
+            if (g->ressourcesFrelon >= 8) {
                 printf("Vous produisez une Reine (8 Pollen, 8 tours)\n");
-                *nbPollenF -= 8;
+                g->ressourcesFrelon -= 8;
                 break;
             } else {
                 printf("Pas assez de pollen pour produire une Reine.\n");
@@ -171,17 +163,17 @@ int afficheChoix(int n, int *nbPollenA, int *nbPollenF) {
         break;
     case 2:
         if (n) {
-            if (*nbPollenA >= 3) {
+            if (g->ressourcesAbeille >= 3) {
                 printf("Vous produisez une Ouvrière\n");
-                *nbPollenA -= 3;
+                g->ressourcesAbeille -= 3;
                 break;
             } else {
                 printf("Vous n'avez pas assez de Pollen\n");
             }
         } else {
-            if (*nbPollenF >= 3) {
+            if (g->ressourcesFrelon >= 3) {
                 printf("Vous produisez un Frelon\n");
-                *nbPollenF -= 3;
+                g->ressourcesFrelon -= 3;
                 break;
             } else {
                 printf("Vous n'avez pas assez de ressource\n");
@@ -190,9 +182,9 @@ int afficheChoix(int n, int *nbPollenA, int *nbPollenF) {
         break;
     case 3:
         if (n) {
-            if (*nbPollenA >= 5) {
+            if (g->ressourcesAbeille >= 5) {
                 printf("Vous produisez une Guerrière\n");
-                *nbPollenA -= 5;
+                g->ressourcesAbeille -= 5;
                 break;
             } else {
                 printf("Vous n'avez pas assez de Pollen\n");
@@ -204,16 +196,15 @@ int afficheChoix(int n, int *nbPollenA, int *nbPollenF) {
         break;
     case 4:
         if (n) {
-            if (*nbPollenA >= 6) {
+            if (g->ressourcesAbeille >= 6) {
                 printf("Vous produisez un Escadron\n");
-                *nbPollenA -= 6;
+                g->ressourcesAbeille -= 6;
                 break;
             } else {
                 printf("Vous n'avez pas assez de Pollen\n");
             }
         } else {
-            printf("Mauvais choix\n");
-            afficheChoix(n, nbPollenA, nbPollenF);
+            printf("Vous passez votre tour\n");
             break;
         }
         break;
@@ -223,39 +214,100 @@ int afficheChoix(int n, int *nbPollenA, int *nbPollenF) {
             break;
         } else {
             printf("Mauvais choix\n");
-            afficheChoix(n, nbPollenA, nbPollenF);
+            afficheChoix(n, g);
+            break;
+        }
+    case 6:
+        if (n) {
+            printf("Vous passez votre tour\n");
+            break;
+        } else {
+            printf("Mauvais choix\n");
+            afficheChoix(n, g);
             break;
         }
     default:
         printf("Mauvais choix\n");
-        afficheChoix(n, nbPollenA, nbPollenF);
+        afficheChoix(n, g);
         break;
     }
-
     return choix;
 }
 
-void afficher_table(char **plateau) {
-    for (int i = 0; i < LIGNES; i++) {
-        printf("\n");
-        for (int j = 0; j < COLONNES; j++) {
-            printf("| %c ", plateau[i][j]);
+
+Unite *initUnite(char camp, char type, int posx, int posy){
+    Unite *u = (Unite*)malloc(sizeof(Unite));
+    if(u != NULL){
+        u->camp = camp;
+        u->type = type;
+        switch(type){
+            case 'r' : u->force = FREINE; u->temps = TREINE; break;
+            case 'o' : u->force = FOUVRIERE; u->temps = TOUVRIERE; break;
+            case 'e' : u->force = FESCADRON; u->temps = TESCADRON; break;
+            case 'g' : u->force = FGUERRIERE; u->temps = TGUERRIERE; break;
+            case 'f' : u->force = FFRELON; u->temps = TFRELON; break;
+            case 'R' : u->force = 0; u->temps = 0; break;
+            case 'N' : u->force = 0; u->temps = 0; break;
         }
-        printf("|");
+        u->posx = posx;
+        u->posy = posy;
+        u->destx = -1;
+        u->desty = -1;
+        u->production = ' ';
+        u->toursrestant = -1;
+        u->usuiv = NULL;
+        u->uprec = NULL;
+        u->colsuiv = NULL;
+        u->colprec = NULL;
+        u->vsuiv = NULL;
+        u->vprec = NULL;
     }
-    printf("\n");
+    return u;
 }
 
+Case * initCase(){
+    Case *c = (Case*)malloc(sizeof(Case));
+    if(c != NULL){
+        c->colonie = NULL;
+        c->occupant = NULL;
+    }
+    return c;
+}
+
+Grille * initGrille(){
+    Grille *g = (Grille*)malloc(sizeof(Grille));
+    if(g != NULL){
+        g->abeille = NULL;
+        g->frelon = NULL;
+        g->tour = 0;
+        g->ressourcesAbeille = 0;
+        g->ressourcesFrelon = 0;
+    }
+    return g;
+}
+
+
 int main(void) {
-    char **tab = cree_table();
-    afficher_table(tab);
+    Grille g;
+    bool jeu = true;
     int generer = genStart();
     printf("%d\n", generer);
-    int nbPollenA = 10;
-    int nbPollenF = 10;
-    int *ptrPollenA = &nbPollenA;
-    int *ptrPollenF = &nbPollenF;
-    afficheChoix(generer, ptrPollenA, ptrPollenF);
-    printf("Il vous reste %d Pollen et %d Pollen\n", *ptrPollenA, *ptrPollenF);
+
+    g.ressourcesAbeille = 10;
+    g.ressourcesFrelon = 10;
+    while (jeu) {
+        afficheChoix(generer, &g);
+        if (generer == 1)
+            generer = 0;
+        else
+            generer = 1;
+        printf("Il vous reste %d Pollen Abeilles et %d Pollen Frelons\n",
+               g.ressourcesAbeille, g.ressourcesFrelon);
+        if (g.ressourcesAbeille < 3 && g.ressourcesFrelon < 3) {
+            printf("Vous devez attendre de récuperer des ressources");
+            jeu = false;
+        }
+    }
+
     return 0;
 }
