@@ -234,20 +234,40 @@ int afficheChoix(int n, Grille *g) {
     return choix;
 }
 
-
-Unite *initUnite(char camp, char type, int posx, int posy){
-    Unite *u = (Unite*)malloc(sizeof(Unite));
-    if(u != NULL){
+Unite *initUnite(char camp, char type, int posx, int posy) {
+    Unite *u = (Unite *)malloc(sizeof(Unite));
+    if (u != NULL) {
         u->camp = camp;
         u->type = type;
-        switch(type){
-            case 'r' : u->force = FREINE; u->temps = TREINE; break;
-            case 'o' : u->force = FOUVRIERE; u->temps = TOUVRIERE; break;
-            case 'e' : u->force = FESCADRON; u->temps = TESCADRON; break;
-            case 'g' : u->force = FGUERRIERE; u->temps = TGUERRIERE; break;
-            case 'f' : u->force = FFRELON; u->temps = TFRELON; break;
-            case 'R' : u->force = 0; u->temps = 0; break;
-            case 'N' : u->force = 0; u->temps = 0; break;
+        switch (type) {
+        case 'r':
+            u->force = FREINE;
+            u->temps = TREINE;
+            break;
+        case 'o':
+            u->force = FOUVRIERE;
+            u->temps = TOUVRIERE;
+            break;
+        case 'e':
+            u->force = FESCADRON;
+            u->temps = TESCADRON;
+            break;
+        case 'g':
+            u->force = FGUERRIERE;
+            u->temps = TGUERRIERE;
+            break;
+        case 'f':
+            u->force = FFRELON;
+            u->temps = TFRELON;
+            break;
+        case 'R':
+            u->force = 0;
+            u->temps = 0;
+            break;
+        case 'N':
+            u->force = 0;
+            u->temps = 0;
+            break;
         }
         u->posx = posx;
         u->posy = posy;
@@ -265,18 +285,18 @@ Unite *initUnite(char camp, char type, int posx, int posy){
     return u;
 }
 
-Case * initCase(){
-    Case *c = (Case*)malloc(sizeof(Case));
-    if(c != NULL){
+Case *initCase() {
+    Case *c = (Case *)malloc(sizeof(Case));
+    if (c != NULL) {
         c->colonie = NULL;
         c->occupant = NULL;
     }
     return c;
 }
 
-Grille * initGrille(){
-    Grille *g = (Grille*)malloc(sizeof(Grille));
-    if(g != NULL){
+Grille *initGrille() {
+    Grille *g = (Grille *)malloc(sizeof(Grille));
+    if (g != NULL) {
         g->abeille = NULL;
         g->frelon = NULL;
         g->tour = 0;
@@ -285,7 +305,35 @@ Grille * initGrille(){
     }
     return g;
 }
-
+void anihile(UListe u);
+// ATTENTION!!! Si c'est la 1re colonie d'un camps qui est detruite, il faut
+// repointer abeille/frelon dans Grille vers la prochaine colonie avant
+// destruction.
+void detruire_unite(UListe u) {
+    if (u->type == 'R' || u->type == 'N') {
+        if (u->colsuiv != NULL)
+            u->colsuiv->colprec = u->colprec;
+        if (u->colprec != NULL)
+            u->colprec->colsuiv = u->colsuiv;
+        anihile(u);
+    } else {
+        if (u->usuiv != NULL)
+            u->usuiv->uprec = u->uprec;
+        if (u->uprec != NULL)
+            u->uprec->usuiv = u->usuiv;
+    }
+    if (u->vsuiv != NULL)
+        u->vsuiv->vprec = u->vprec;
+    if (u->vprec != NULL)
+        u->vprec->vsuiv = u->vsuiv;
+    free(u);
+}
+void anihile(UListe u) {
+    if (u->usuiv == NULL)
+        return;
+    anihile(u->usuiv);
+    detruire_unite(u->usuiv);
+}
 
 int main(void) {
     Grille g;
