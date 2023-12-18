@@ -80,6 +80,7 @@ typedef struct {
     int tour; // Numero du tour
     int ressourcesAbeille, ressourcesFrelon;
 } Grille;
+
 /*
 Case alloueCellule(int x) {
     Cellule *cell = (Cellule *)malloc(sizeof(Cellule));
@@ -123,14 +124,15 @@ int genStart(void) {
 int afficheChoix(int n, Grille *g) {
     int choix;
     if (n) {
-        printf("C'est le tour des Abeilles\n");
-        printf("Pollen : %d\n", g->ressourcesAbeille);
-        printf("1 - Produire Reines (7 Pollen, 8 tours)\n");
-        printf("2 - Produire Ouvrière (3 Pollen, 2 tours)\n");
-        printf("3 - Produire Guerrière (5 Pollen, 4 tours)\n");
-        printf("4 - Produire Escadron (6 Pollen, 6 tours)\n");
-        printf("5 - Detruire une unite\n");
-        printf("6 - Passer son tour\n");
+        printf("C'est le tour des Abeilles\n"
+               "Pollen : %d\n"
+               "1 - Produire Reines (7 Pollen, 8 tours)\n"
+               "2 - Produire Ouvrière (3 Pollen, 2 tours)\n"
+               "3 - Produire Guerrière (5 Pollen, 4 tours)\n"
+               "4 - Produire Escadron (6 Pollen, 6 tours)\n"
+               "5 - Detruire une unite\n"
+               "6 - Passer son tour\n",
+               g->ressourcesAbeille);
     } else {
         printf("C'est le tour des Frelons\n");
         printf("Pollen : %d\n", g->ressourcesFrelon);
@@ -150,6 +152,7 @@ int afficheChoix(int n, Grille *g) {
                 break;
             } else {
                 printf("Pas assez de pollen pour produire une Reine.\n");
+                afficheChoix(n, g);
             }
         } else {
             if (g->ressourcesFrelon >= 8) {
@@ -158,6 +161,7 @@ int afficheChoix(int n, Grille *g) {
                 break;
             } else {
                 printf("Pas assez de pollen pour produire une Reine.\n");
+                afficheChoix(n, g);
             }
         }
         break;
@@ -169,6 +173,7 @@ int afficheChoix(int n, Grille *g) {
                 break;
             } else {
                 printf("Vous n'avez pas assez de Pollen\n");
+                afficheChoix(n, g);
             }
         } else {
             if (g->ressourcesFrelon >= 3) {
@@ -177,6 +182,7 @@ int afficheChoix(int n, Grille *g) {
                 break;
             } else {
                 printf("Vous n'avez pas assez de ressource\n");
+                afficheChoix(n, g);
             }
         }
         break;
@@ -188,9 +194,10 @@ int afficheChoix(int n, Grille *g) {
                 break;
             } else {
                 printf("Vous n'avez pas assez de Pollen\n");
+                afficheChoix(n, g);
             }
         } else {
-            printf("Vous detruisez X et recuperez X pollen\n");
+            printf("Vous detruisez X et recuperez X ressources\n");
             break;
         }
         break;
@@ -202,6 +209,7 @@ int afficheChoix(int n, Grille *g) {
                 break;
             } else {
                 printf("Vous n'avez pas assez de Pollen\n");
+                afficheChoix(n, g);
             }
         } else {
             printf("Vous passez votre tour\n");
@@ -233,6 +241,19 @@ int afficheChoix(int n, Grille *g) {
     }
     return choix;
 }
+/*
+void GagnePollen(char unite[10], Grille *g) {
+    printf("Quelle unité souhaitez vous detruire ?\n");
+    switch (unite) {
+    case "Reine":
+        printf("TEST");
+        break;
+
+    default:
+        break;
+    }
+}
+*/
 
 Unite *initUnite(char camp, char type, int posx, int posy) {
     Unite *u = (Unite *)malloc(sizeof(Unite));
@@ -338,17 +359,17 @@ void anihile(UListe u) {
 int main(void) {
     Grille g;
     bool jeu = true;
-    int generer = genStart();
-    printf("%d\n", generer);
+    g.tour = genStart();
+    printf("%d\n", g.tour);
 
     g.ressourcesAbeille = 10;
     g.ressourcesFrelon = 10;
     while (jeu) {
-        afficheChoix(generer, &g);
-        if (generer == 1)
-            generer = 0;
+        afficheChoix(g.tour, &g);
+        if (g.tour == 1)
+            g.tour = 0;
         else
-            generer = 1;
+            g.tour = 1;
         printf("Il vous reste %d Pollen Abeilles et %d Pollen Frelons\n",
                g.ressourcesAbeille, g.ressourcesFrelon);
         if (g.ressourcesAbeille < 3 && g.ressourcesFrelon < 3) {
