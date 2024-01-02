@@ -241,19 +241,21 @@ int afficheChoix(int n, Grille *g) {
     }
     return choix;
 }
-/*
-void GagnePollen(char unite[10], Grille *g) {
-    printf("Quelle unité souhaitez vous detruire ?\n");
+
+void GagneRessource(int unite, Grille *g) {
+    printf("Quelle unité souhaitez vous detruire ?\n"
+           "1 - "
+           "test");
+
     switch (unite) {
-    case "Reine":
-        printf("TEST");
+    case 1:
+        
         break;
 
     default:
         break;
     }
 }
-*/
 
 Unite *initUnite(char camp, char type, int posx, int posy) {
     Unite *u = (Unite *)malloc(sizeof(Unite));
@@ -354,6 +356,50 @@ void anihile(UListe u) {
         return;
     anihile(u->usuiv);
     detruire_unite(u->usuiv);
+}
+
+void ajout_colac(UListe camp, Unite colonie){
+    if(camp->colsuiv == NULL){
+        camp->colsuiv = colonie;
+        colonie->colprec = camp;
+    }else{
+        ajout_colac(camp->colsuiv, colonie);
+    }
+}
+// Ajoute une unité à une colonie.
+void ajout_uacol(UListe colonie, Unite u){
+    if(colonie->usuiv == NULL){
+        colonie->usuiv = u;
+        u->uprec = colonie;
+    }else{
+        ajout_uacol(colonie->usuiv, u);
+    }
+}
+// Ajoute une unité à une case.
+void ajout_uac(UListe occupant, Unite u){
+    if(occupant->vsuiv == NULL){
+        occupant->vsuiv = u;
+        u->vprec = occupant;
+    }else{
+        ajout_uacol(occupant->vsuiv, u);
+    }
+}
+void creer_unite(Grille * g, char camp, char type, int x, int y){
+    if(g->plateau[x][y] == NULL){
+        g->plateau[x][y] = initCase();
+    }
+    Unite * u = initUnite(camp, type, x, y);
+    if(type == 'R' || type == 'N'){
+        g->plateau[x][y]->colonie == u;
+        g->plateau[x][y]->occupant == u;
+        switch(type){  //ajout de la colonie au camp qui convient.
+            case 'R' : ajout_colac(g->abeille, u); break;
+            case 'N' : ajout_colac(g->frelon, u); break;
+        }
+    }else{
+        ajout_uacol(g->plateau[x][y]->colonie, u); //ajout de l'unité à sa colonie.
+        ajout_uac(g->plateau[x][y]->occupant, u); //ajout de l'unité à sa case.
+    }
 }
 
 int main(void) {
