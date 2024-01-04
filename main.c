@@ -120,10 +120,39 @@ int genStart(void) {
     srand((unsigned int)time(NULL));
     return rand() % 2;
 }
+Case *initCase();
+void ajout_uac(UListe occupant, Unite u);
+void ajout_colac(UListe camp, Unite colonie);
+void ajout_uacol(UListe colonie, Unite u);
+Unite *initUnite(char camp, char type, int posx, int posy);
 
-int afficheChoix(int n, Grille *g) {
+void creer_unite(Grille *g, char camp, char type, int x, int y) {
+    if (g->plateau[x][y].colonie == NULL) {
+        g->plateau[x][y] = *initCase();
+    }
+
+    Unite *u = initUnite(camp, type, x, y);
+    if (type == 'R' || type == 'N') {
+        g->plateau[x][y].colonie = u;
+        g->plateau[x][y].occupant = u;
+        switch (type) { // ajout de la colonie au camp qui convient.
+        case 'R':
+            ajout_colac(g->abeille, *u);
+            break;
+        case 'N':
+            ajout_colac(g->frelon, *u);
+            break;
+        }
+    } else {
+        ajout_uacol(g->plateau[x][y].colonie,
+                    *u); // ajout de l'unité à sa colonie.
+        ajout_uac(g->plateau[x][y].occupant, *u); // ajout de l'unité à sa case.
+    }
+}
+void afficheChoix(int n, Grille *g) {
     int choix;
-    if (n) {
+    int x, y;
+    if (n % 2 == 0) {
         printf("C'est le tour des Abeilles\n"
                "Pollen : %d\n"
                "1 - Produire Reines (7 Pollen, 8 tours)\n"
@@ -142,13 +171,20 @@ int afficheChoix(int n, Grille *g) {
         printf("4 - Passer son tour\n");
     }
     scanf("%d", &choix);
-
     switch (choix) {
     case 1:
-        if (n) {
+        if (n % 2 == 0) {
             if (g->ressourcesAbeille >= 7) {
                 printf("Vous produisez une Reine (7 Pollen, 8 tours)\n");
                 g->ressourcesAbeille -= 7;
+                printf("Choisissez les coordonées x et y\n");
+                scanf("%d %d", &x, &y);
+                while (g->plateau[x][y].colonie != NULL) {
+                    printf("Entrez des autres coordonées étant donné que la case est occupée\n");
+                    scanf("%d %d", &x, &y);
+                }
+                
+                creer_unite(g, ABEILLES, REINE, x, y);
                 break;
             } else {
                 printf("Pas assez de pollen pour produire une Reine.\n");
@@ -166,7 +202,7 @@ int afficheChoix(int n, Grille *g) {
         }
         break;
     case 2:
-        if (n) {
+        if (n % 2 == 0) {
             if (g->ressourcesAbeille >= 3) {
                 printf("Vous produisez une Ouvrière\n");
                 g->ressourcesAbeille -= 3;
@@ -187,7 +223,7 @@ int afficheChoix(int n, Grille *g) {
         }
         break;
     case 3:
-        if (n) {
+        if (n % 2 == 0) {
             if (g->ressourcesAbeille >= 5) {
                 printf("Vous produisez une Guerrière\n");
                 g->ressourcesAbeille -= 5;
@@ -202,7 +238,7 @@ int afficheChoix(int n, Grille *g) {
         }
         break;
     case 4:
-        if (n) {
+        if (n % 2 == 0) {
             if (g->ressourcesAbeille >= 6) {
                 printf("Vous produisez un Escadron\n");
                 g->ressourcesAbeille -= 6;
@@ -217,7 +253,7 @@ int afficheChoix(int n, Grille *g) {
         }
         break;
     case 5:
-        if (n) {
+        if (n % 2 == 0) {
             printf("Vous detruisez X et recuperez X pollen\n");
             break;
         } else {
@@ -226,7 +262,7 @@ int afficheChoix(int n, Grille *g) {
             break;
         }
     case 6:
-        if (n) {
+        if (n % 2 == 0) {
             printf("Vous passez votre tour\n");
             break;
         } else {
@@ -239,9 +275,8 @@ int afficheChoix(int n, Grille *g) {
         afficheChoix(n, g);
         break;
     }
-    return choix;
 }
-
+/*
 void GagneRessource(int unite, Grille *g) {
     printf("Quelle unité souhaitez vous detruire ?\n"
            "1 - "
@@ -249,13 +284,14 @@ void GagneRessource(int unite, Grille *g) {
 
     switch (unite) {
     case 1:
-        
+
         break;
 
     default:
         break;
     }
-}
+} En cours..
+*/
 
 Unite *initUnite(char camp, char type, int posx, int posy) {
     Unite *u = (Unite *)malloc(sizeof(Unite));
@@ -329,6 +365,7 @@ Grille *initGrille() {
     return g;
 }
 void anihile(UListe u);
+
 // ATTENTION!!! Si c'est la 1re colonie d'un camps qui est detruite, il faut
 // repointer abeille/frelon dans Grille vers la prochaine colonie avant
 // destruction.
@@ -351,6 +388,7 @@ void detruire_unite(UListe u) {
         u->vprec->vsuiv = u->vsuiv;
     free(u);
 }
+
 void anihile(UListe u) {
     if (u->usuiv == NULL)
         return;
@@ -358,64 +396,44 @@ void anihile(UListe u) {
     detruire_unite(u->usuiv);
 }
 
-void ajout_colac(UListe camp, Unite colonie){
-    if(camp->colsuiv == NULL){
-        camp->colsuiv = colonie;
-        colonie->colprec = camp;
-    }else{
+// Ajoute une colonie à un camp.
+void ajout_colac(UListe camp, Unite colonie) {
+    if (camp->colsuiv == NULL) {
+        camp->colsuiv = &colonie;
+        colonie.colprec = camp;
+    } else {
         ajout_colac(camp->colsuiv, colonie);
     }
 }
 // Ajoute une unité à une colonie.
-void ajout_uacol(UListe colonie, Unite u){
-    if(colonie->usuiv == NULL){
-        colonie->usuiv = u;
-        u->uprec = colonie;
-    }else{
+void ajout_uacol(UListe colonie, Unite u) {
+    if (colonie->usuiv == NULL) {
+        colonie->usuiv = &u;
+        u.uprec = colonie;
+    } else {
         ajout_uacol(colonie->usuiv, u);
     }
 }
 // Ajoute une unité à une case.
-void ajout_uac(UListe occupant, Unite u){
-    if(occupant->vsuiv == NULL){
-        occupant->vsuiv = u;
-        u->vprec = occupant;
-    }else{
+void ajout_uac(UListe occupant, Unite u) {
+    if (occupant->vsuiv == NULL) {
+        occupant->vsuiv = &u;
+        u.vprec = occupant;
+    } else {
         ajout_uacol(occupant->vsuiv, u);
     }
 }
-void creer_unite(Grille * g, char camp, char type, int x, int y){
-    if(g->plateau[x][y] == NULL){
-        g->plateau[x][y] = initCase();
-    }
-    Unite * u = initUnite(camp, type, x, y);
-    if(type == 'R' || type == 'N'){
-        g->plateau[x][y]->colonie == u;
-        g->plateau[x][y]->occupant == u;
-        switch(type){  //ajout de la colonie au camp qui convient.
-            case 'R' : ajout_colac(g->abeille, u); break;
-            case 'N' : ajout_colac(g->frelon, u); break;
-        }
-    }else{
-        ajout_uacol(g->plateau[x][y]->colonie, u); //ajout de l'unité à sa colonie.
-        ajout_uac(g->plateau[x][y]->occupant, u); //ajout de l'unité à sa case.
-    }
-}
+
 
 int main(void) {
     Grille g;
     bool jeu = true;
     g.tour = genStart();
     printf("%d\n", g.tour);
-
-    g.ressourcesAbeille = 10;
-    g.ressourcesFrelon = 10;
+    g.ressourcesAbeille = g.ressourcesFrelon = 10;
     while (jeu) {
         afficheChoix(g.tour, &g);
-        if (g.tour == 1)
-            g.tour = 0;
-        else
-            g.tour = 1;
+        g.tour += 1;
         printf("Il vous reste %d Pollen Abeilles et %d Pollen Frelons\n",
                g.ressourcesAbeille, g.ressourcesFrelon);
         if (g.ressourcesAbeille < 3 && g.ressourcesFrelon < 3) {
