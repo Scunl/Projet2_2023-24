@@ -81,50 +81,17 @@ typedef struct {
     int ressourcesAbeille, ressourcesFrelon;
 } Grille;
 
-/*
-Case alloueCellule(int x) {
-    Cellule *cell = (Cellule *)malloc(sizeof(Cellule));
-    if (cell != NULL) {
-        cell->valeur = x;
-        cell->suivant = NULL;
-    }
-    return cell;
-}
-
-Case extraitTete(Liste *al) {
-    if (*al == NULL)
-        return NULL;
-    Cellule *tmp = *al;
-    *al = tmp->suivant;
-    tmp->suivant = NULL;
-    return tmp;
-}
-
-int insererTete(Liste *al, int x) {
-    Case *cell = alloueCellule(x);
-    if (cell == NULL)
-        return 0;
-    cell->suivant = *al;
-    *al = cell *;
-    return 1;
-}
-void commencejeu(**plateau, int n) {
-    if (n == 1) {
-        Case->occupant->posx = 0;
-        Case->occupant->posy = 0;
-    }
-}
-*/
-
 int genStart(void) {
     srand((unsigned int)time(NULL));
-    return rand() % 2;
+    return (rand() % 2) + 1;
 }
+
 Case *initCase();
 void ajout_uac(UListe occupant, Unite u);
 void ajout_colac(UListe camp, Unite colonie);
 void ajout_uacol(UListe colonie, Unite u);
 Unite *initUnite(char camp, char type, int posx, int posy);
+void detruire_unite(UListe u);
 
 void creer_unite(Grille *g, char camp, char type, int x, int y) {
     if (g->plateau[x][y].colonie == NULL) {
@@ -137,143 +104,25 @@ void creer_unite(Grille *g, char camp, char type, int x, int y) {
         g->plateau[x][y].occupant = u;
         switch (type) { // ajout de la colonie au camp qui convient.
         case 'R':
-            ajout_colac(g->abeille, *u);
-            break;
+            if (g->abeille == NULL) {
+                g->abeille = u;
+            } else {
+                ajout_colac(g->abeille, *u);
+                break;
+            }
         case 'N':
-            ajout_colac(g->frelon, *u);
-            break;
+            if (g->frelon == NULL) {
+                g->frelon = u;
+            } else {
+                ajout_colac(g->frelon, *u);
+                break;
+            }
         }
     } else {
+
         ajout_uacol(g->plateau[x][y].colonie,
                     *u); // ajout de l'unité à sa colonie.
         ajout_uac(g->plateau[x][y].occupant, *u); // ajout de l'unité à sa case.
-    }
-}
-void afficheChoix(int n, Grille *g) {
-    int choix;
-    int x, y;
-    if (n % 2 == 0) {
-        printf("C'est le tour des Abeilles\n"
-               "Pollen : %d\n"
-               "1 - Produire Reines (7 Pollen, 8 tours)\n"
-               "2 - Produire Ouvrière (3 Pollen, 2 tours)\n"
-               "3 - Produire Guerrière (5 Pollen, 4 tours)\n"
-               "4 - Produire Escadron (6 Pollen, 6 tours)\n"
-               "5 - Detruire une unite\n"
-               "6 - Passer son tour\n",
-               g->ressourcesAbeille);
-    } else {
-        printf("C'est le tour des Frelons\n");
-        printf("Pollen : %d\n", g->ressourcesFrelon);
-        printf("1 - Produire Reines (8 Pollen, 8 tours)\n");
-        printf("2 - Produire Frelon (3 Pollen, 5 tours)\n");
-        printf("3 - Detruire une unité\n");
-        printf("4 - Passer son tour\n");
-    }
-    scanf("%d", &choix);
-    switch (choix) {
-    case 1:
-        if (n % 2 == 0) {
-            if (g->ressourcesAbeille >= 7) {
-                printf("Vous produisez une Reine (7 Pollen, 8 tours)\n");
-                g->ressourcesAbeille -= 7;
-                printf("Choisissez les coordonées x et y\n");
-                scanf("%d %d", &x, &y);
-                while (g->plateau[x][y].colonie != NULL) {
-                    printf("Entrez des autres coordonées étant donné que la case est occupée\n");
-                    scanf("%d %d", &x, &y);
-                }
-                
-                creer_unite(g, ABEILLES, REINE, x, y);
-                break;
-            } else {
-                printf("Pas assez de pollen pour produire une Reine.\n");
-                afficheChoix(n, g);
-            }
-        } else {
-            if (g->ressourcesFrelon >= 8) {
-                printf("Vous produisez une Reine (8 Pollen, 8 tours)\n");
-                g->ressourcesFrelon -= 8;
-                break;
-            } else {
-                printf("Pas assez de pollen pour produire une Reine.\n");
-                afficheChoix(n, g);
-            }
-        }
-        break;
-    case 2:
-        if (n % 2 == 0) {
-            if (g->ressourcesAbeille >= 3) {
-                printf("Vous produisez une Ouvrière\n");
-                g->ressourcesAbeille -= 3;
-                break;
-            } else {
-                printf("Vous n'avez pas assez de Pollen\n");
-                afficheChoix(n, g);
-            }
-        } else {
-            if (g->ressourcesFrelon >= 3) {
-                printf("Vous produisez un Frelon\n");
-                g->ressourcesFrelon -= 3;
-                break;
-            } else {
-                printf("Vous n'avez pas assez de ressource\n");
-                afficheChoix(n, g);
-            }
-        }
-        break;
-    case 3:
-        if (n % 2 == 0) {
-            if (g->ressourcesAbeille >= 5) {
-                printf("Vous produisez une Guerrière\n");
-                g->ressourcesAbeille -= 5;
-                break;
-            } else {
-                printf("Vous n'avez pas assez de Pollen\n");
-                afficheChoix(n, g);
-            }
-        } else {
-            printf("Vous detruisez X et recuperez X ressources\n");
-            break;
-        }
-        break;
-    case 4:
-        if (n % 2 == 0) {
-            if (g->ressourcesAbeille >= 6) {
-                printf("Vous produisez un Escadron\n");
-                g->ressourcesAbeille -= 6;
-                break;
-            } else {
-                printf("Vous n'avez pas assez de Pollen\n");
-                afficheChoix(n, g);
-            }
-        } else {
-            printf("Vous passez votre tour\n");
-            break;
-        }
-        break;
-    case 5:
-        if (n % 2 == 0) {
-            printf("Vous detruisez X et recuperez X pollen\n");
-            break;
-        } else {
-            printf("Mauvais choix\n");
-            afficheChoix(n, g);
-            break;
-        }
-    case 6:
-        if (n % 2 == 0) {
-            printf("Vous passez votre tour\n");
-            break;
-        } else {
-            printf("Mauvais choix\n");
-            afficheChoix(n, g);
-            break;
-        }
-    default:
-        printf("Mauvais choix\n");
-        afficheChoix(n, g);
-        break;
     }
 }
 /*
@@ -356,38 +205,25 @@ Case *initCase() {
 Grille *initGrille() {
     Grille *g = (Grille *)malloc(sizeof(Grille));
     if (g != NULL) {
-        g->abeille = NULL;
-        g->frelon = NULL;
+        for (int i = 0; i < LIGNES; i++) {
+            for (int j = 0; j < COLONNES; j++) {
+                g->plateau[i][j] = *initCase();
+            }
+        }
+        g->abeille = initUnite('A', 'R', 0, 0);
+        g->frelon = initUnite('F', 'N', LIGNES - 1, COLONNES - 1);
         g->tour = 0;
         g->ressourcesAbeille = 0;
         g->ressourcesFrelon = 0;
     }
     return g;
 }
+
 void anihile(UListe u);
 
 // ATTENTION!!! Si c'est la 1re colonie d'un camps qui est detruite, il faut
 // repointer abeille/frelon dans Grille vers la prochaine colonie avant
 // destruction.
-void detruire_unite(UListe u) {
-    if (u->type == 'R' || u->type == 'N') {
-        if (u->colsuiv != NULL)
-            u->colsuiv->colprec = u->colprec;
-        if (u->colprec != NULL)
-            u->colprec->colsuiv = u->colsuiv;
-        anihile(u);
-    } else {
-        if (u->usuiv != NULL)
-            u->usuiv->uprec = u->uprec;
-        if (u->uprec != NULL)
-            u->uprec->usuiv = u->usuiv;
-    }
-    if (u->vsuiv != NULL)
-        u->vsuiv->vprec = u->vprec;
-    if (u->vprec != NULL)
-        u->vprec->vsuiv = u->vsuiv;
-    free(u);
-}
 
 void anihile(UListe u) {
     if (u->usuiv == NULL)
@@ -407,36 +243,219 @@ void ajout_colac(UListe camp, Unite colonie) {
 }
 // Ajoute une unité à une colonie.
 void ajout_uacol(UListe colonie, Unite u) {
-    if (colonie->usuiv == NULL) {
-        colonie->usuiv = &u;
+    if (colonie == NULL) {
+        colonie = &u;
         u.uprec = colonie;
     } else {
-        ajout_uacol(colonie->usuiv, u);
+        ajout_uacol(colonie, u);
     }
 }
+
+UListe prendre_unite(UListe u) {
+    // Enlève l'unité donnée de toutes ses listes, refermes ces listes, puis
+    // renvoie l'unité.
+    if (u->type == 'R' || u->type == 'N') {
+        if (u->colsuiv != NULL)
+            u->colsuiv->colprec = u->colprec;
+        if (u->colprec != NULL)
+            u->colprec->colsuiv = u->colsuiv;
+        anihile(u);
+    } else {
+        if (u->usuiv != NULL)
+            u->usuiv->uprec = u->uprec;
+        if (u->uprec != NULL)
+            u->uprec->usuiv = u->usuiv;
+    }
+    if (u->vsuiv != NULL)
+        u->vsuiv->vprec = u->vprec;
+    if (u->vprec != NULL)
+        u->vprec->vsuiv = u->vsuiv;
+    return u;
+}
+
+void deplacer_unite(Unite *u, Grille *g) {
+    UListe v = prendre_unite(u);
+
+    // if(g->plateau[v.destx][v.desty] == NULL) g->plateau[v.destx][v.desty] =
+    // initCase;
+
+    if (g->plateau[v->destx][v->desty].occupant == NULL) {
+        g->plateau[v->destx][v->desty].occupant = v;
+    } else {
+        ajout_uac(g->plateau[v->destx][v->desty].occupant, *v);
+    }
+
+    v->posx = v->destx;
+    v->posy = v->desty;
+    v->destx = -1;
+    v->desty = -1;
+}
+
+void detruire_unite(UListe u) {
+    // Prend une unité et la détruit.
+    free(prendre_unite(u));
+}
+
 // Ajoute une unité à une case.
 void ajout_uac(UListe occupant, Unite u) {
-    if (occupant->vsuiv == NULL) {
-        occupant->vsuiv = &u;
+    if (occupant == NULL || occupant->force == u.force) {
+        u.vsuiv = occupant;
         u.vprec = occupant;
+        occupant = &u;
+        occupant = &u;
     } else {
-        ajout_uacol(occupant->vsuiv, u);
+        ajout_uacol(occupant, u);
     }
 }
 
+void choixetaction(int n, Grille *g) {
+    int choix;
+    int x, y;
+
+    if (n % 2 == 0) {
+        printf("C'est le tour des Abeilles\n"
+               "Pollen : %d\n"
+               "1 - Produire Reines (7 Pollen, 8 tours)\n"
+               "2 - Produire Ouvrière (3 Pollen, 2 tours)\n"
+               "3 - Produire Guerrière (5 Pollen, 4 tours)\n"
+               "4 - Produire Escadron (6 Pollen, 6 tours)\n"
+               "5 - Detruire une unite\n"
+               "6 - Passer son tour\n",
+               g->ressourcesAbeille);
+    } else {
+        printf("C'est le tour des Frelons\n");
+        printf("Pollen : %d\n", g->ressourcesFrelon);
+        printf("1 - Produire Reines (8 Pollen, 8 tours)\n");
+        printf("2 - Produire Frelon (3 Pollen, 5 tours)\n");
+        printf("3 - Detruire une unité\n");
+        printf("4 - Passer son tour\n");
+    }
+    scanf("%d", &choix);
+    switch (choix) {
+    case 1:
+        if (n % 2 == 0) {
+            if (g->ressourcesAbeille >= 1) { // RessourcesAbeille à 1 pour jouer comme je veux
+                printf("Vous produisez une Reine (7 Pollen, 8 tours)\n");
+                g->ressourcesAbeille -= 1;
+                printf("Choisissez les coordonées x et y\n");
+                if (g->abeille != NULL) {
+                    do {
+                        scanf(" %d %d", &x, &y);
+                    } while (g->abeille->posx == x && g->abeille->posy == y);
+                } else {
+                    scanf(" %d %d", &x, &y);
+                }
+                creer_unite(g, ABEILLES, REINE, x, y);
+
+                printf("Vous avez crée une unité en %d, %d\n", x, y);
+                break;
+            } else {
+                printf("Pas assez de pollen pour produire une Reine.\n");
+                choixetaction(n, g);
+            }
+        } else {
+            if (g->ressourcesFrelon >= 8) {
+                printf("Vous produisez une Reine (8 Pollen, 8 tours)\n");
+                g->ressourcesFrelon -= 8;
+                break;
+            } else {
+                printf("Pas assez de pollen pour produire une Reine.\n");
+                choixetaction(n, g);
+            }
+        }
+        break;
+    case 2:
+        if (n % 2 == 0) {
+            if (g->ressourcesAbeille >= 3) {
+                printf("Vous produisez une Ouvrière\n");
+                g->ressourcesAbeille -= 3;
+                break;
+            } else {
+                printf("Vous n'avez pas assez de Pollen\n");
+                choixetaction(n, g);
+            }
+        } else {
+            if (g->ressourcesFrelon >= 3) {
+                printf("Vous produisez un Frelon\n");
+                g->ressourcesFrelon -= 3;
+                break;
+            } else {
+                printf("Vous n'avez pas assez de ressource\n");
+                choixetaction(n, g);
+            }
+        }
+        break;
+    case 3:
+        if (n % 2 == 0) {
+            if (g->ressourcesAbeille >= 5) {
+                printf("Vous produisez une Guerrière\n");
+                g->ressourcesAbeille -= 5;
+                break;
+            } else {
+                printf("Vous n'avez pas assez de Pollen\n");
+                choixetaction(n, g);
+            }
+        } else {
+            printf("Vous detruisez X et recuperez X ressources\n");
+            break;
+        }
+        break;
+    case 4:
+        if (n % 2 == 0) {
+            if (g->ressourcesAbeille >= 6) {
+                printf("Vous produisez un Escadron\n");
+                g->ressourcesAbeille -= 6;
+                break;
+            } else {
+                printf("Vous n'avez pas assez de Pollen\n");
+                choixetaction(n, g);
+            }
+        } else {
+            printf("Vous passez votre tour\n");
+            break;
+        }
+        break;
+    case 5:
+        if (n % 2 == 0) {
+            printf("Vous detruisez X et recuperez X pollen\n");
+            break;
+        } else {
+            printf("Mauvais choix\n");
+            choixetaction(n, g);
+            break;
+        }
+    case 6:
+        if (n % 2 == 0) {
+            printf("Vous passez votre tour\n");
+            break;
+        } else {
+            printf("Mauvais choix\n");
+            choixetaction(n, g);
+            break;
+        }
+    default:
+        printf("Mauvais choix\n");
+        choixetaction(n, g);
+        break;
+    }
+}
 
 int main(void) {
-    Grille g;
+    Grille *g = initGrille();
     bool jeu = true;
-    g.tour = genStart();
-    printf("%d\n", g.tour);
-    g.ressourcesAbeille = g.ressourcesFrelon = 10;
+    g->tour = genStart();
+    printf("%d\n", g->tour);
+    g->ressourcesAbeille = g->ressourcesFrelon = 10;
+
     while (jeu) {
-        afficheChoix(g.tour, &g);
-        g.tour += 1;
-        printf("Il vous reste %d Pollen Abeilles et %d Pollen Frelons\n",
-               g.ressourcesAbeille, g.ressourcesFrelon);
-        if (g.ressourcesAbeille < 3 && g.ressourcesFrelon < 3) {
+        choixetaction(g->tour, g);
+        g->tour += 1;
+        if (g->tour % 2)
+            printf("Il vous reste %d ressources Abeilles\n",
+                   g->ressourcesAbeille);
+        else
+            printf("Il vous reste %d ressources Frelon\n", g->ressourcesFrelon);
+        if (g->ressourcesAbeille < 3 && g->ressourcesFrelon < 3) {
             printf("Vous devez attendre de récuperer des ressources");
             jeu = false;
         }
