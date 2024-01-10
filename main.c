@@ -20,6 +20,7 @@
 #define GUERRIERE 'g'
 #define RUCHE 'R'
 #define NID 'N'
+#define FRELON 'f'
 
 // Pour la recolte de pollen
 #define RECOLTE 'p'
@@ -93,7 +94,9 @@ void ajout_uacol(UListe colonie, Unite u);
 Unite *initUnite(char camp, char type, int posx, int posy);
 void detruire_unite(UListe u);
 
+
 void creer_unite(Grille *g, char camp, char type, int x, int y) {
+    printf("%p\n", (void *)&g->plateau[x][y].colonie);
     if (g->plateau[x][y].colonie == NULL) {
         g->plateau[x][y] = *initCase();
     }
@@ -205,13 +208,13 @@ Case *initCase() {
 Grille *initGrille() {
     Grille *g = (Grille *)malloc(sizeof(Grille));
     if (g != NULL) {
-        for (int i = 0; i < LIGNES; i++) {
-            for (int j = 0; j < COLONNES; j++) {
+        for (int i = 0; i < COLONNES; i++) {
+            for (int j = 0; j < LIGNES; j++) {
                 g->plateau[i][j] = *initCase();
             }
         }
         g->abeille = initUnite('A', 'R', 0, 0);
-        g->frelon = initUnite('F', 'N', LIGNES - 1, COLONNES - 1);
+        g->frelon = initUnite('F', 'N', COLONNES - 1, LIGNES - 1);
         g->tour = 0;
         g->ressourcesAbeille = 0;
         g->ressourcesFrelon = 0;
@@ -251,6 +254,43 @@ void ajout_uacol(UListe colonie, Unite u) {
     }
 }
 
+void afficher_unites(UListe u, int x_case, int y_case, int pas, /*int nb_unite,*/ int nb_type){
+    // nb_unite et nb_type commence supposément à 0.
+
+    if(u->vsuiv == NULL || u->vsuiv->type != u->type){
+        switch(u->type){
+            case 'R' :
+                MLV_draw_text_box(x_case + (pas/12) + 2*(pas/6), y_case + (pas/12), pas/6, pas/6, "R", 1, MLV_COLOR_ORANGE, MLV_COLOR_ORANGE, MLV_COLOR_BLACK, MLV_TEXT_CENTER, MLV_HORIZONTAL_CENTER, MLV_VERTICAL_CENTER);
+                break;
+            case 'N' :
+                MLV_draw_text_box(x_case + (pas/12) + 2*(pas/6), y_case + (pas/12), pas/6, pas/6, "N", 1, MLV_COLOR_BLUE, MLV_COLOR_BLUE, MLV_COLOR_BLACK, MLV_TEXT_CENTER, MLV_HORIZONTAL_CENTER, MLV_VERTICAL_CENTER);
+                break;
+            case 'r':
+                if(u->camp == 'A')MLV_draw_text_box(x_case + (pas/12), y_case + (pas/4) + ((pas/6)*(nb_type-2)), 5*(pas/6), pas/6, "reine", 1, MLV_COLOR_RED, MLV_COLOR_RED, MLV_COLOR_BLACK, MLV_TEXT_CENTER, MLV_HORIZONTAL_CENTER, MLV_VERTICAL_CENTER);
+                
+                if(u->camp == 'F')MLV_draw_text_box(x_case + (pas/12), y_case + (pas/4), 5*(pas/6), 2*(pas/3)/(nb_type-1), "reine", 1, MLV_COLOR_PURPLE, MLV_COLOR_PURPLE, MLV_COLOR_BLACK, MLV_TEXT_CENTER, MLV_HORIZONTAL_CENTER, MLV_VERTICAL_CENTER);
+                
+                break;
+            case 'o':
+                MLV_draw_text_box(x_case + (pas/12), y_case + (pas/4) + ((pas/6)*(nb_type-2)), 5*(pas/6), pas/6, "ouvriere", 1, MLV_COLOR_GREEN, MLV_COLOR_GREEN, MLV_COLOR_BLACK, MLV_TEXT_CENTER, MLV_HORIZONTAL_CENTER, MLV_VERTICAL_CENTER);
+                break;
+            case 'e':
+                MLV_draw_text_box(x_case + (pas/12), y_case + (pas/4) + ((pas/6)*(nb_type-2)), 5*(pas/6), pas/6, "escadron", 1, MLV_COLOR_PINK, MLV_COLOR_PINK, MLV_COLOR_BLACK, MLV_TEXT_CENTER, MLV_HORIZONTAL_CENTER, MLV_VERTICAL_CENTER);
+                break;
+            case 'g':
+                MLV_draw_text_box(x_case + (pas/12), y_case + (pas/4) + ((pas/6)*(nb_type-2)), 5*(pas/6), pas/6, "guerriere", 1, MLV_COLOR_YELLOW, MLV_COLOR_YELLOW, MLV_COLOR_BLACK, MLV_TEXT_CENTER, MLV_HORIZONTAL_CENTER, MLV_VERTICAL_CENTER);
+                break;
+            case 'f':
+                MLV_draw_text_box(x_case + (pas/12), y_case + (pas/4) + (pas/3)*(nb_type-2), 5*(pas/12), 2*(pas/3)/(nb_type-1), "frelon", 1, MLV_COLOR_CYAN, MLV_COLOR_CYAN, MLV_COLOR_BLACK, MLV_TEXT_CENTER, MLV_HORIZONTAL_CENTER, MLV_VERTICAL_CENTER);
+                break;
+        }
+        MLV_update_window();
+        if(u->vsuiv == NULL) return;
+        afficher_unites(u->vsuiv, x_case, y_case, pas, nb_type+1);
+    }else{
+        afficher_unites(u->vsuiv, x_case, y_case, pas, nb_type);
+    }
+}
 UListe prendre_unite(UListe u) {
     // Enlève l'unité donnée de toutes ses listes, refermes ces listes, puis
     // renvoie l'unité.
@@ -296,6 +336,18 @@ void detruire_unite(UListe u) {
     free(prendre_unite(u));
 }
 
+void afficher_plateau(Grille * g, int nbl, int nbc, int pas){
+    int x, y;
+    for(x = 0; x < nbc; x++){
+        for(y = 0; y < nbl; y++){
+            MLV_draw_filled_rectangle(x*pas, y*pas, pas, pas, MLV_COLOR_WHITE);
+            MLV_draw_filled_rectangle((x*pas) + 2, (y*pas) + 2, pas-2, pas-2, MLV_COLOR_BLACK);
+            MLV_update_window();
+            if(g->plateau[x][y].occupant != NULL) afficher_unites(g->plateau[x][y].occupant, x, y, pas, 0);
+        }
+    }
+}
+
 // Ajoute une unité à une case.
 void ajout_uac(UListe occupant, Unite u) {
     if (occupant == NULL || occupant->force == u.force) {
@@ -334,19 +386,13 @@ void choixetaction(int n, Grille *g) {
     switch (choix) {
     case 1:
         if (n % 2 == 0) {
-            if (g->ressourcesAbeille >= 1) { // RessourcesAbeille à 1 pour jouer comme je veux
+            if (g->ressourcesAbeille >=
+                1) { // RessourcesAbeille à 1 pour jouer comme je veux
                 printf("Vous produisez une Reine (7 Pollen, 8 tours)\n");
                 g->ressourcesAbeille -= 1;
                 printf("Choisissez les coordonées x et y\n");
-                if (g->abeille != NULL) {
-                    do {
-                        scanf(" %d %d", &x, &y);
-                    } while (g->abeille->posx == x && g->abeille->posy == y);
-                } else {
-                    scanf(" %d %d", &x, &y);
-                }
+                scanf(" %d %d", &x, &y);
                 creer_unite(g, ABEILLES, REINE, x, y);
-
                 printf("Vous avez crée une unité en %d, %d\n", x, y);
                 break;
             } else {
@@ -355,8 +401,11 @@ void choixetaction(int n, Grille *g) {
             }
         } else {
             if (g->ressourcesFrelon >= 8) {
-                printf("Vous produisez une Reine (8 Pollen, 8 tours)\n");
                 g->ressourcesFrelon -= 8;
+                printf("Vous produisez une Reine (8 Pollen, 8 "
+                       "tours)\nChoisissez les coordonées x et y\n");
+                scanf(" %d %d", &x, &y);
+                creer_unite(g, FRELONS, REINE, x, y);
                 break;
             } else {
                 printf("Pas assez de pollen pour produire une Reine.\n");
@@ -367,8 +416,11 @@ void choixetaction(int n, Grille *g) {
     case 2:
         if (n % 2 == 0) {
             if (g->ressourcesAbeille >= 3) {
-                printf("Vous produisez une Ouvrière\n");
+                printf("Vous produisez une Ouvrière\nChoisissez les coordonées "
+                       "x et y\n");
                 g->ressourcesAbeille -= 3;
+                scanf(" %d %d", &x, &y);
+                creer_unite(g, ABEILLES, REINE, x, y);
                 break;
             } else {
                 printf("Vous n'avez pas assez de Pollen\n");
@@ -376,8 +428,11 @@ void choixetaction(int n, Grille *g) {
             }
         } else {
             if (g->ressourcesFrelon >= 3) {
-                printf("Vous produisez un Frelon\n");
+                printf("Vous produisez un Frelon\nChoisissez les coordonées x "
+                       "et y\n");
                 g->ressourcesFrelon -= 3;
+                scanf(" %d %d", &x, &y);
+                creer_unite(g, FRELONS, FRELON, x, y);
                 break;
             } else {
                 printf("Vous n'avez pas assez de ressource\n");
@@ -388,8 +443,11 @@ void choixetaction(int n, Grille *g) {
     case 3:
         if (n % 2 == 0) {
             if (g->ressourcesAbeille >= 5) {
-                printf("Vous produisez une Guerrière\n");
+                printf("Vous produisez une Guerrière\nChoisissez les "
+                       "coordonées x et y\n");
                 g->ressourcesAbeille -= 5;
+                scanf(" %d %d", &x, &y);
+                creer_unite(g, ABEILLES, GUERRIERE, x, y);
                 break;
             } else {
                 printf("Vous n'avez pas assez de Pollen\n");
@@ -403,8 +461,11 @@ void choixetaction(int n, Grille *g) {
     case 4:
         if (n % 2 == 0) {
             if (g->ressourcesAbeille >= 6) {
-                printf("Vous produisez un Escadron\n");
+                printf("Vous produisez un Escadron\nChoisissez les coordonées "
+                       "x et y\n");
                 g->ressourcesAbeille -= 6;
+                scanf(" %d %d", &x, &y);
+                creer_unite(g, ABEILLES, ESCADRON, x, y);
                 break;
             } else {
                 printf("Vous n'avez pas assez de Pollen\n");
@@ -433,6 +494,9 @@ void choixetaction(int n, Grille *g) {
             choixetaction(n, g);
             break;
         }
+    case 'i':
+        choixetaction(n, g);
+        break;
     default:
         printf("Mauvais choix\n");
         choixetaction(n, g);
@@ -440,26 +504,31 @@ void choixetaction(int n, Grille *g) {
     }
 }
 
+void funbp(Grille *g) {
+    printf("test");
+}
+
+
+
 int main(void) {
     Grille *g = initGrille();
     bool jeu = true;
     g->tour = genStart();
     printf("%d\n", g->tour);
     g->ressourcesAbeille = g->ressourcesFrelon = 10;
-
     while (jeu) {
         choixetaction(g->tour, g);
         g->tour += 1;
+        printf("g tour : %d\n", g->tour);
         if (g->tour % 2)
-            printf("Il vous reste %d ressources Abeilles\n",
-                   g->ressourcesAbeille);
+            printf("Il vous reste %d ressources Frelons\n",
+                   g->ressourcesFrelon);
         else
-            printf("Il vous reste %d ressources Frelon\n", g->ressourcesFrelon);
+            printf("Il vous reste %d ressources Abeilles\n", g->ressourcesAbeille);
         if (g->ressourcesAbeille < 3 && g->ressourcesFrelon < 3) {
             printf("Vous devez attendre de récuperer des ressources");
             jeu = false;
         }
     }
-
     return 0;
 }
