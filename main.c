@@ -566,8 +566,67 @@ void choixetaction(int n, Grille *g) {
     }
 }
 
-void funbp(Grille *g) {
-    printf("test");
+void capture_colonie(Grille *g, UListe colonie, UListe attaquant) {
+    if (colonie->colsuiv != NULL)
+        colonie->colsuiv->colprec = colonie->colprec;
+    if (colonie->colprec != NULL)
+        colonie->colprec->colsuiv = colonie->colsuiv;
+    if (attaquant->usuiv != NULL)
+        attaquant->usuiv->uprec = attaquant->uprec;
+    if (attaquant->uprec != NULL)
+        attaquant->uprec->usuiv = attaquant->usuiv;
+    if (attaquant->vsuiv != NULL)
+        attaquant->vsuiv->vprec = attaquant->vprec;
+    if (attaquant->vprec != NULL)
+        attaquant->vprec->vsuiv = attaquant->vsuiv;
+    ajout_uacol(colonie, *attaquant);
+    if (colonie->type == 'R') {
+        colonie->type = 'N';
+        ajout_colac(g->frelon, *colonie);
+    } else if (colonie->type == 'N') {
+        colonie->type = 'R';
+        ajout_colac(g->abeille, *colonie);
+    }
+}
+
+// On assume que les fins de liste Case sont données.
+void combat(Grille *g, UListe abeille, UListe frelon) {
+    if (abeille->type == 'R') {
+        capture_colonie(g, abeille, frelon);
+        return;
+    } else if (frelon->type == 'N') {
+        capture_colonie(g, frelon, abeille);
+        return;
+    }
+    srand((unsigned int)time(NULL));
+    int a = 0, f = 0;
+    while (a == f) {
+        a = ((rand() % 59) + 1) * abeille->force;
+        f = ((rand() % 59) + 1) * frelon->force;
+    }
+    if (a < f) {
+        switch (abeille->type) {
+        case 'r':
+            g->ressourcesFrelon += CREINEA;
+            break;
+        case 'o':
+            g->ressourcesFrelon += COUVRIERE;
+            break;
+        case 'g':
+            g->ressourcesFrelon += CGUERRIERE;
+            break;
+        case 'e':
+            g->ressourcesFrelon += CESCADRON;
+            break;
+        }
+        if (abeille->vprec != NULL)
+            combat(g, abeille->vprec, frelon);
+        detruire_unite(abeille);
+    } else {
+        if (frelon->vprec != NULL)
+            combat(g, abeille, frelon->vprec);
+        detruire_unite(frelon);
+    }
 }
 
 int main(void) {
@@ -576,11 +635,16 @@ int main(void) {
     g->tour = genStart();
     printf("%d\n", g->tour);
     g->ressourcesAbeille = g->ressourcesFrelon = 10;
+    const char a = 'a';
+    int pas = 30;
+
+    MLV_create_window(&a, &a, LIGNES * pas, COLONNES * pas);
+    afficher_plateau(g, COLONNES, LIGNES, pas);
+    MLV_update_window();
+
     while (jeu) {
         choixetaction(g->tour, g);
         g->tour += 1;
-        if (g->tour == 3)
-            funbp(g);
         printf("g tour : %d\n", g->tour);
         if (g->tour % 2)
             printf("Il vous reste %d ressources Frelons\n",
@@ -593,5 +657,7 @@ int main(void) {
             jeu = false;
         }
     }
+    MLV_wait_seconds(10);
+    MLV_free_window();
     return 0;
 }
