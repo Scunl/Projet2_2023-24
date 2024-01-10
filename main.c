@@ -94,7 +94,6 @@ void ajout_uacol(UListe colonie, Unite u);
 Unite *initUnite(char camp, char type, int posx, int posy);
 void detruire_unite(UListe u);
 
-
 void creer_unite(Grille *g, char camp, char type, int x, int y) {
     printf("%p\n", (void *)&g->plateau[x][y].colonie);
     if (g->plateau[x][y].colonie == NULL) {
@@ -254,46 +253,129 @@ void ajout_uacol(UListe colonie, Unite u) {
     }
 }
 
-void afficher_unites(UListe u, int x_case, int y_case, int pas, /*int nb_unite,*/ int nb_type){
+void afficher_unites(UListe u, int x_case, int y_case, int pas,
+                     /*int nb_unite,*/ int nb_type) {
     // nb_unite et nb_type commence supposément à 0.
 
-    if(u->vsuiv == NULL || u->vsuiv->type != u->type){
-        switch(u->type){
-            case 'R' :
-                MLV_draw_text_box(x_case + (pas/12) + 2*(pas/6), y_case + (pas/12), pas/6, pas/6, "R", 1, MLV_COLOR_ORANGE, MLV_COLOR_ORANGE, MLV_COLOR_BLACK, MLV_TEXT_CENTER, MLV_HORIZONTAL_CENTER, MLV_VERTICAL_CENTER);
-                break;
-            case 'N' :
-                MLV_draw_text_box(x_case + (pas/12) + 2*(pas/6), y_case + (pas/12), pas/6, pas/6, "N", 1, MLV_COLOR_BLUE, MLV_COLOR_BLUE, MLV_COLOR_BLACK, MLV_TEXT_CENTER, MLV_HORIZONTAL_CENTER, MLV_VERTICAL_CENTER);
-                break;
-            case 'r':
-                if(u->camp == 'A')MLV_draw_text_box(x_case + (pas/12), y_case + (pas/4) + ((pas/6)*(nb_type-2)), 5*(pas/6), pas/6, "reine", 1, MLV_COLOR_RED, MLV_COLOR_RED, MLV_COLOR_BLACK, MLV_TEXT_CENTER, MLV_HORIZONTAL_CENTER, MLV_VERTICAL_CENTER);
-                
-                if(u->camp == 'F')MLV_draw_text_box(x_case + (pas/12), y_case + (pas/4), 5*(pas/6), 2*(pas/3)/(nb_type-1), "reine", 1, MLV_COLOR_PURPLE, MLV_COLOR_PURPLE, MLV_COLOR_BLACK, MLV_TEXT_CENTER, MLV_HORIZONTAL_CENTER, MLV_VERTICAL_CENTER);
-                
-                break;
-            case 'o':
-                MLV_draw_text_box(x_case + (pas/12), y_case + (pas/4) + ((pas/6)*(nb_type-2)), 5*(pas/6), pas/6, "ouvriere", 1, MLV_COLOR_GREEN, MLV_COLOR_GREEN, MLV_COLOR_BLACK, MLV_TEXT_CENTER, MLV_HORIZONTAL_CENTER, MLV_VERTICAL_CENTER);
-                break;
-            case 'e':
-                MLV_draw_text_box(x_case + (pas/12), y_case + (pas/4) + ((pas/6)*(nb_type-2)), 5*(pas/6), pas/6, "escadron", 1, MLV_COLOR_PINK, MLV_COLOR_PINK, MLV_COLOR_BLACK, MLV_TEXT_CENTER, MLV_HORIZONTAL_CENTER, MLV_VERTICAL_CENTER);
-                break;
-            case 'g':
-                MLV_draw_text_box(x_case + (pas/12), y_case + (pas/4) + ((pas/6)*(nb_type-2)), 5*(pas/6), pas/6, "guerriere", 1, MLV_COLOR_YELLOW, MLV_COLOR_YELLOW, MLV_COLOR_BLACK, MLV_TEXT_CENTER, MLV_HORIZONTAL_CENTER, MLV_VERTICAL_CENTER);
-                break;
-            case 'f':
-                MLV_draw_text_box(x_case + (pas/12), y_case + (pas/4) + (pas/3)*(nb_type-2), 5*(pas/12), 2*(pas/3)/(nb_type-1), "frelon", 1, MLV_COLOR_CYAN, MLV_COLOR_CYAN, MLV_COLOR_BLACK, MLV_TEXT_CENTER, MLV_HORIZONTAL_CENTER, MLV_VERTICAL_CENTER);
-                break;
+    if (u->vsuiv == NULL || u->vsuiv->type != u->type) {
+        switch (u->type) {
+        case 'R':
+            MLV_draw_text_box(x_case + (pas / 12) + 2 * (pas / 6),
+                              y_case + (pas / 12), pas / 6, pas / 6, "R", 1,
+                              MLV_COLOR_ORANGE, MLV_COLOR_ORANGE,
+                              MLV_COLOR_BLACK, MLV_TEXT_CENTER,
+                              MLV_HORIZONTAL_CENTER, MLV_VERTICAL_CENTER);
+            break;
+        case 'N':
+            MLV_draw_text_box(x_case + (pas / 12) + 2 * (pas / 6),
+                              y_case + (pas / 12), pas / 6, pas / 6, "N", 1,
+                              MLV_COLOR_BLUE, MLV_COLOR_BLUE, MLV_COLOR_BLACK,
+                              MLV_TEXT_CENTER, MLV_HORIZONTAL_CENTER,
+                              MLV_VERTICAL_CENTER);
+            break;
+        case 'r':
+            if (u->camp == 'A')
+                MLV_draw_text_box(
+                    x_case + (pas / 12),
+                    y_case + (pas / 4) + ((pas / 6) * (nb_type - 2)),
+                    5 * (pas / 6), pas / 6, "reine", 1, MLV_COLOR_RED,
+                    MLV_COLOR_RED, MLV_COLOR_BLACK, MLV_TEXT_CENTER,
+                    MLV_HORIZONTAL_CENTER, MLV_VERTICAL_CENTER);
+
+            if (u->camp == 'F')
+                MLV_draw_text_box(
+                    x_case + (pas / 12), y_case + (pas / 4), 5 * (pas / 6),
+                    2 * (pas / 3) / (nb_type - 1), "reine", 1, MLV_COLOR_PURPLE,
+                    MLV_COLOR_PURPLE, MLV_COLOR_BLACK, MLV_TEXT_CENTER,
+                    MLV_HORIZONTAL_CENTER, MLV_VERTICAL_CENTER);
+
+            break;
+        case 'o':
+            MLV_draw_text_box(x_case + (pas / 12),
+                              y_case + (pas / 4) + ((pas / 6) * (nb_type - 2)),
+                              5 * (pas / 6), pas / 6, "ouvriere", 1,
+                              MLV_COLOR_GREEN, MLV_COLOR_GREEN, MLV_COLOR_BLACK,
+                              MLV_TEXT_CENTER, MLV_HORIZONTAL_CENTER,
+                              MLV_VERTICAL_CENTER);
+            break;
+        case 'e':
+            MLV_draw_text_box(x_case + (pas / 12),
+                              y_case + (pas / 4) + ((pas / 6) * (nb_type - 2)),
+                              5 * (pas / 6), pas / 6, "escadron", 1,
+                              MLV_COLOR_PINK, MLV_COLOR_PINK, MLV_COLOR_BLACK,
+                              MLV_TEXT_CENTER, MLV_HORIZONTAL_CENTER,
+                              MLV_VERTICAL_CENTER);
+            break;
+        case 'g':
+            MLV_draw_text_box(x_case + (pas / 12),
+                              y_case + (pas / 4) + ((pas / 6) * (nb_type - 2)),
+                              5 * (pas / 6), pas / 6, "guerriere", 1,
+                              MLV_COLOR_YELLOW, MLV_COLOR_YELLOW,
+                              MLV_COLOR_BLACK, MLV_TEXT_CENTER,
+                              MLV_HORIZONTAL_CENTER, MLV_VERTICAL_CENTER);
+            break;
+        case 'f':
+            MLV_draw_text_box(x_case + (pas / 12),
+                              y_case + (pas / 4) + (pas / 3) * (nb_type - 2),
+                              5 * (pas / 12), 2 * (pas / 3) / (nb_type - 1),
+                              "frelon", 1, MLV_COLOR_CYAN, MLV_COLOR_CYAN,
+                              MLV_COLOR_BLACK, MLV_TEXT_CENTER,
+                              MLV_HORIZONTAL_CENTER, MLV_VERTICAL_CENTER);
+            break;
         }
         MLV_update_window();
-        if(u->vsuiv == NULL) return;
-        afficher_unites(u->vsuiv, x_case, y_case, pas, nb_type+1);
-    }else{
+        if (u->vsuiv == NULL)
+            return;
+        afficher_unites(u->vsuiv, x_case, y_case, pas, nb_type + 1);
+    } else {
         afficher_unites(u->vsuiv, x_case, y_case, pas, nb_type);
     }
 }
+/*
 UListe prendre_unite(UListe u) {
     // Enlève l'unité donnée de toutes ses listes, refermes ces listes, puis
     // renvoie l'unité.
+    if (u->type == 'R' || u->type == 'N') {
+        if (u->colsuiv != NULL)
+            u->colsuiv->colprec = u->colprec;
+        if (u->colprec != NULL)
+            u->colprec->colsuiv = u->colsuiv;
+    } else {
+        if (u->usuiv != NULL)
+            u->usuiv->uprec = u->uprec;
+        if (u->uprec != NULL)
+            u->uprec->usuiv = u->usuiv;
+    }
+    if (u->vsuiv != NULL)
+        u->vsuiv->vprec = u->vprec;
+    if (u->vprec != NULL)
+        u->vprec->vsuiv = u->vsuiv;
+    return u;
+}*/
+
+void deplacer_unite(Unite *u, Grille *g) {
+    if (u->vsuiv != NULL)
+        u->vsuiv->vprec = u->vprec;
+    if (u->vprec != NULL)
+        u->vprec->vsuiv = u->vsuiv;
+
+    // if(g->plateau[v.destx][v.desty] == NULL) g->plateau[v.destx][v.desty] =
+    // initCase;
+
+    if (g->plateau[u->destx][u->desty].occupant == NULL) {
+        g->plateau[u->destx][u->desty].occupant = u;
+    } else {
+        ajout_uac(g->plateau[u->destx][u->desty].occupant, *u);
+    }
+
+    u->posx = u->destx;
+    u->posy = u->desty;
+    u->destx = -1;
+    u->desty = -1;
+}
+
+void detruire_unite(UListe u) {
+    // Prend une unité et la détruit.
     if (u->type == 'R' || u->type == 'N') {
         if (u->colsuiv != NULL)
             u->colsuiv->colprec = u->colprec;
@@ -310,40 +392,20 @@ UListe prendre_unite(UListe u) {
         u->vsuiv->vprec = u->vprec;
     if (u->vprec != NULL)
         u->vprec->vsuiv = u->vsuiv;
-    return u;
+    free(u);
 }
 
-void deplacer_unite(Unite *u, Grille *g) {
-    UListe v = prendre_unite(u);
-
-    // if(g->plateau[v.destx][v.desty] == NULL) g->plateau[v.destx][v.desty] =
-    // initCase;
-
-    if (g->plateau[v->destx][v->desty].occupant == NULL) {
-        g->plateau[v->destx][v->desty].occupant = v;
-    } else {
-        ajout_uac(g->plateau[v->destx][v->desty].occupant, *v);
-    }
-
-    v->posx = v->destx;
-    v->posy = v->desty;
-    v->destx = -1;
-    v->desty = -1;
-}
-
-void detruire_unite(UListe u) {
-    // Prend une unité et la détruit.
-    free(prendre_unite(u));
-}
-
-void afficher_plateau(Grille * g, int nbl, int nbc, int pas){
+void afficher_plateau(Grille *g, int nbl, int nbc, int pas) {
     int x, y;
-    for(x = 0; x < nbc; x++){
-        for(y = 0; y < nbl; y++){
-            MLV_draw_filled_rectangle(x*pas, y*pas, pas, pas, MLV_COLOR_WHITE);
-            MLV_draw_filled_rectangle((x*pas) + 2, (y*pas) + 2, pas-2, pas-2, MLV_COLOR_BLACK);
+    for (x = 0; x < nbc; x++) {
+        for (y = 0; y < nbl; y++) {
+            MLV_draw_filled_rectangle(x * pas, y * pas, pas, pas,
+                                      MLV_COLOR_WHITE);
+            MLV_draw_filled_rectangle((x * pas) + 2, (y * pas) + 2, pas - 2,
+                                      pas - 2, MLV_COLOR_BLACK);
             MLV_update_window();
-            if(g->plateau[x][y].occupant != NULL) afficher_unites(g->plateau[x][y].occupant, x, y, pas, 0);
+            if (g->plateau[x][y].occupant != NULL)
+                afficher_unites(g->plateau[x][y].occupant, x, y, pas, 0);
         }
     }
 }
@@ -508,8 +570,6 @@ void funbp(Grille *g) {
     printf("test");
 }
 
-
-
 int main(void) {
     Grille *g = initGrille();
     bool jeu = true;
@@ -519,12 +579,15 @@ int main(void) {
     while (jeu) {
         choixetaction(g->tour, g);
         g->tour += 1;
+        if (g->tour == 3)
+            funbp(g);
         printf("g tour : %d\n", g->tour);
         if (g->tour % 2)
             printf("Il vous reste %d ressources Frelons\n",
                    g->ressourcesFrelon);
         else
-            printf("Il vous reste %d ressources Abeilles\n", g->ressourcesAbeille);
+            printf("Il vous reste %d ressources Abeilles\n",
+                   g->ressourcesAbeille);
         if (g->ressourcesAbeille < 3 && g->ressourcesFrelon < 3) {
             printf("Vous devez attendre de récuperer des ressources");
             jeu = false;
