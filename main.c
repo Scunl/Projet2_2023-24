@@ -226,6 +226,26 @@ void anihile(UListe u);
 // ATTENTION!!! Si c'est la 1re colonie d'un camps qui est detruite, il faut
 // repointer abeille/frelon dans Grille vers la prochaine colonie avant
 // destruction.
+void detruire_unite(UListe u) {
+    // Prend une unité et la détruit.
+    if (u->type == 'R' || u->type == 'N') {
+        if (u->colsuiv != NULL)
+            u->colsuiv->colprec = u->colprec;
+        if (u->colprec != NULL)
+            u->colprec->colsuiv = u->colsuiv;
+        anihile(u);
+    } else {
+        if (u->usuiv != NULL)
+            u->usuiv->uprec = u->uprec;
+        if (u->uprec != NULL)
+            u->uprec->usuiv = u->usuiv;
+    }
+    if (u->vsuiv != NULL)
+        u->vsuiv->vprec = u->vprec;
+    if (u->vprec != NULL)
+        u->vprec->vsuiv = u->vsuiv;
+    free(u);
+}
 
 void anihile(UListe u) {
     if (u->usuiv == NULL)
@@ -253,9 +273,63 @@ void ajout_uacol(UListe colonie, Unite u) {
     }
 }
 
-void afficher_unites(UListe u, int x_case, int y_case, int pas,
-                     /*int nb_unite,*/ int nb_type) {
-    // nb_unite et nb_type commence supposément à 0.
+// Ajoute une unité à une case.
+void ajout_uac(UListe occupant, Unite u) {
+    if (occupant == NULL || occupant->force == u.force) {
+        u.vsuiv = occupant;
+        u.vprec = occupant;
+        occupant = &u;
+        occupant = &u;
+    } else {
+        ajout_uacol(occupant, u);
+    }
+}
+
+/*
+UListe prendre_unite(UListe u) {
+    // Enlève l'unité donnée de toutes ses listes, refermes ces listes, puis
+    // renvoie l'unité.
+    if (u->type == 'R' || u->type == 'N') {
+        if (u->colsuiv != NULL)
+            u->colsuiv->colprec = u->colprec;
+        if (u->colprec != NULL)
+            u->colprec->colsuiv = u->colsuiv;
+    } else {
+        if (u->usuiv != NULL)
+            u->usuiv->uprec = u->uprec;
+        if (u->uprec != NULL)
+            u->uprec->usuiv = u->usuiv;
+    }
+    if (u->vsuiv != NULL)
+        u->vsuiv->vprec = u->vprec;
+    if (u->vprec != NULL)
+        u->vprec->vsuiv = u->vsuiv;
+    return u;
+}*/
+
+void deplacer_unite(Unite *u, Grille *g) {
+    if (u->vsuiv != NULL)
+        u->vsuiv->vprec = u->vprec;
+    if (u->vprec != NULL)
+        u->vprec->vsuiv = u->vsuiv;
+
+    // if(g->plateau[v.destx][v.desty] == NULL) g->plateau[v.destx][v.desty] =
+    // initCase;
+
+    if (g->plateau[u->destx][u->desty].occupant == NULL) {
+        g->plateau[u->destx][u->desty].occupant = u;
+    } else {
+        ajout_uac(g->plateau[u->destx][u->desty].occupant, *u);
+    }
+
+    u->posx = u->destx;
+    u->posy = u->desty;
+    u->destx = -1;
+    u->desty = -1;
+}
+
+void afficher_unites(UListe u, int x_case, int y_case, int pas, int nb_type) {
+    //nb_type commence supposément à 0.
 
     if (u->vsuiv == NULL || u->vsuiv->type != u->type) {
         switch (u->type) {
@@ -323,7 +397,6 @@ void afficher_unites(UListe u, int x_case, int y_case, int pas,
                               MLV_HORIZONTAL_CENTER, MLV_VERTICAL_CENTER);
             break;
         }
-        MLV_update_window();
         if (u->vsuiv == NULL)
             return;
         afficher_unites(u->vsuiv, x_case, y_case, pas, nb_type + 1);
@@ -331,69 +404,7 @@ void afficher_unites(UListe u, int x_case, int y_case, int pas,
         afficher_unites(u->vsuiv, x_case, y_case, pas, nb_type);
     }
 }
-/*
-UListe prendre_unite(UListe u) {
-    // Enlève l'unité donnée de toutes ses listes, refermes ces listes, puis
-    // renvoie l'unité.
-    if (u->type == 'R' || u->type == 'N') {
-        if (u->colsuiv != NULL)
-            u->colsuiv->colprec = u->colprec;
-        if (u->colprec != NULL)
-            u->colprec->colsuiv = u->colsuiv;
-    } else {
-        if (u->usuiv != NULL)
-            u->usuiv->uprec = u->uprec;
-        if (u->uprec != NULL)
-            u->uprec->usuiv = u->usuiv;
-    }
-    if (u->vsuiv != NULL)
-        u->vsuiv->vprec = u->vprec;
-    if (u->vprec != NULL)
-        u->vprec->vsuiv = u->vsuiv;
-    return u;
-}*/
 
-void deplacer_unite(Unite *u, Grille *g) {
-    if (u->vsuiv != NULL)
-        u->vsuiv->vprec = u->vprec;
-    if (u->vprec != NULL)
-        u->vprec->vsuiv = u->vsuiv;
-
-    // if(g->plateau[v.destx][v.desty] == NULL) g->plateau[v.destx][v.desty] =
-    // initCase;
-
-    if (g->plateau[u->destx][u->desty].occupant == NULL) {
-        g->plateau[u->destx][u->desty].occupant = u;
-    } else {
-        ajout_uac(g->plateau[u->destx][u->desty].occupant, *u);
-    }
-
-    u->posx = u->destx;
-    u->posy = u->desty;
-    u->destx = -1;
-    u->desty = -1;
-}
-
-void detruire_unite(UListe u) {
-    // Prend une unité et la détruit.
-    if (u->type == 'R' || u->type == 'N') {
-        if (u->colsuiv != NULL)
-            u->colsuiv->colprec = u->colprec;
-        if (u->colprec != NULL)
-            u->colprec->colsuiv = u->colsuiv;
-        anihile(u);
-    } else {
-        if (u->usuiv != NULL)
-            u->usuiv->uprec = u->uprec;
-        if (u->uprec != NULL)
-            u->uprec->usuiv = u->usuiv;
-    }
-    if (u->vsuiv != NULL)
-        u->vsuiv->vprec = u->vprec;
-    if (u->vprec != NULL)
-        u->vprec->vsuiv = u->vsuiv;
-    free(u);
-}
 
 void afficher_plateau(Grille *g, int nbl, int nbc, int pas) {
     int x, y;
@@ -403,24 +414,13 @@ void afficher_plateau(Grille *g, int nbl, int nbc, int pas) {
                                       MLV_COLOR_WHITE);
             MLV_draw_filled_rectangle((x * pas) + 2, (y * pas) + 2, pas - 2,
                                       pas - 2, MLV_COLOR_BLACK);
-            MLV_update_window();
             if (g->plateau[x][y].occupant != NULL)
                 afficher_unites(g->plateau[x][y].occupant, x, y, pas, 0);
+            MLV_update_window();
         }
     }
 }
 
-// Ajoute une unité à une case.
-void ajout_uac(UListe occupant, Unite u) {
-    if (occupant == NULL || occupant->force == u.force) {
-        u.vsuiv = occupant;
-        u.vprec = occupant;
-        occupant = &u;
-        occupant = &u;
-    } else {
-        ajout_uacol(occupant, u);
-    }
-}
 
 void choixetaction(int n, Grille *g) {
     int choix;
